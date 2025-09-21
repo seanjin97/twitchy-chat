@@ -56,6 +56,8 @@ We are building a high throughput, low latency, live message chat service.
 > Average number of messages per user per chatroom: 50
 >
 > Average session duration: 30 mins
+> 
+> Average size of a message: 150 bytes
 
 #### Message sending
 > Average number of messages sent per chatroom: 5000 * 50 = 250,000
@@ -72,7 +74,11 @@ We are building a high throughput, low latency, live message chat service.
 >
 > Average qps for message sending: 750,000 / (30 * 60s) = 417 messages/s
 > 
-> Maximum qps for message sending : 7,500,000 / (30 * 60s) = 41,667 messages/s
+> Maximum qps for message sending: 7,500,000 / (30 * 60s) = 41,667 messages/s
+> 
+> Maximum throughput of messages per second: 41,667 * 150 bytes = ~6 MB/s
+> 
+> Maximum throughput of messages per day: 6 MB/s * 86400s = ~518 GB/day
 
 #### Message reading
 > Max no. of read queries per chatroom in a session: 50,000
@@ -99,12 +105,19 @@ We observe that we generally have a high write to read ratio. We will need to de
     * This company is also has low funding (im poor), we will need to keep our server costs low.
       * We will need a programming language that is performant, has good concurrency support, and has good library support for WebSocket and REST API.
     * A good candidate would be golang for REST APIs and a WebSocket server.
-3. Data store:
+3. Skibidification service:
+   * This is a core component of the system, as it is responsible for transforming user messages into skbidified (nonsense) messages.
+   * It should be able to handle high throughput and low latency.
+   * The skibidification process is an API call to a LLM model.
+   * The LLM is a small self hosted, open sourced model to keep costs low and to keep throughput and latency high.
+   * The Skibidification service should be stateless and horizontally scalable.
+   * A good candidate for the LLM would be LLaMA 3.2 cluster.
+4. Data store:
    * We won't need strong consistency.
    * We will require horizontal scaling to support high write throughput.
    * Most of our data will be timeseries data (messages with timestamps).
    * A good candidate would be a NoSQL database like Cassandra.
-4. Message broker:
+5. Message broker:
    * The core of the application is the live chat functionality. In order to support max 42k messages/s, we are looking at a message broker that can support thousands of requests per second
    * As we are looking to increase the scale of this platform, we do expect the number of messages to increase, and we want a message broker that can scale horizontally.
    * A good candidate would be Apache Kafka.
