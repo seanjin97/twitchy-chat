@@ -17,7 +17,8 @@ We are building a high throughput, low latency, live message chat service.
    * Multiple users can join a chatroom.
    * Message sending and receiving in real-time.
    * Skibidification of messages.
-   * Users should be able to scroll back in time to read previous messages before they joined the chat. (last 10 messages fetched.)
+   * On joining a chat room, the last 10 messages are fetched.
+   * ~~Users should be able to search for old messages using a keyword, which will then return you a list of messages containing that keyword.~~ (Assume the need to store messages for long term.)
 2. User accounts:
    * Only registered users can send messages.
    * Non-registered users can join chat rooms, and only read messages.
@@ -92,10 +93,10 @@ We are building a high throughput, low latency, live message chat service.
 We observe that we generally have a high write to read ratio. We will need to design our system to handle high write throughput.
 
 ## System architecture
-### High level components
+### Components
 1. Client:
    * Simple client side rendered framework with good 3rd party library support such as React would be sufficient.
-2. Server:
+2. API & Websocket Server:
     * REST API server for user authentication, chatroom management, and message sending.
       * Why not gRPC or tRPC?
         * gRPC: For our use this is overkill, since we don't need extremely high performance for the general sign in, register, create chat APIs. Generally, our system will not have many API complex API routes. We don't need to manage the type complexity with tRPC.
@@ -121,3 +122,14 @@ We observe that we generally have a high write to read ratio. We will need to de
    * The core of the application is the live chat functionality. In order to support max 42k messages/s, we are looking at a message broker that can support thousands of requests per second
    * As we are looking to increase the scale of this platform, we do expect the number of messages to increase, and we want a message broker that can scale horizontally.
    * A good candidate would be Apache Kafka.
+
+
+## Questions
+1. How many connections can a single WebSocket server handle?
+   * A single WebSocket server can handle around ?? connections. We will need to scale horizontally to support more connections.
+2. How many messages can a single Skibidification service handle?
+    * A single Skibidification service can handle around ?? messages per second. We will need to scale horizontally to support more queries.
+3. How many messages can a single database instance handle?
+    * A single database instance can handle around ?? messages per second.
+4. How many messages can a single message broker instance handle?
+    * A single message broker instance can handle around ?? messages per second.
