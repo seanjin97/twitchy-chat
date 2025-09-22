@@ -1,96 +1,86 @@
+services:
+  cassandra1:
+    image: cassandra:5.0.2
+    container_name: cassandra1
+    hostname: cassandra1
+    ports:
+      - "9042:9042" # CQL port
+      - "7000:7000" # Internode communication
+      - "9160:9160" # Thrift client API
+    environment:
+      - CASSANDRA_CLUSTER_NAME=TestCluster
+      - CASSANDRA_SEEDS=cassandra1
+      - CASSANDRA_DC=datacenter1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - HEAP_NEWSIZE=128M
+      - MAX_HEAP_SIZE=1G
+    volumes:
+      - cassandra1_data:/var/lib/cassandra
+    networks:
+      - cassandra-net
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  cassandra2:
+    image: cassandra:5.0.2
+    container_name: cassandra2
+    hostname: cassandra2
+    ports:
+      - "9043:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=TestCluster
+      - CASSANDRA_SEEDS=cassandra1
+      - CASSANDRA_DC=datacenter1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - HEAP_NEWSIZE=128M
+      - MAX_HEAP_SIZE=1G
+    volumes:
+      - cassandra2_data:/var/lib/cassandra
+    networks:
+      - cassandra-net
+    depends_on:
+      cassandra1:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  cassandra3:
+    image: cassandra:5.0.2
+    container_name: cassandra3
+    hostname: cassandra3
+    ports:
+      - "9044:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=TestCluster
+      - CASSANDRA_SEEDS=cassandra1
+      - CASSANDRA_DC=datacenter1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - HEAP_NEWSIZE=128M
+      - MAX_HEAP_SIZE=1G
+    volumes:
+      - cassandra3_data:/var/lib/cassandra
+    networks:
+      - cassandra-net
+    depends_on:
+      cassandra2:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  cassandra1_data:
+  cassandra2_data:
+  cassandra3_data:
+
 networks:
   cassandra-net:
     driver: bridge
-
-services:
-  cassandra-1:
-    image: "cassandra:5.0.5"
-    container_name: "cassandra-1"
-    ports:
-      - 7000:7000
-      - 9042:9042
-    networks:
-      - cassandra-net
-    environment:
-      - CASSANDRA_START_RPC=true
-      - CASSANDRA_RPC_ADDRESS=0.0.0.0
-      - CASSANDRA_LISTEN_ADDRESS=auto
-      - CASSANDRA_CLUSTER_NAME=my-cluster
-      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
-      - CASSANDRA_DC=my-datacenter-1
-      - CASSANDRA_RACK=rack-1
-    volumes:
-      - cassandra-node-1:/var/lib/cassandra:rw
-    restart: on-failure
-    healthcheck:
-      test: ["CMD-SHELL", "nodetool info || exit 1"]
-      interval: 30s
-      start_period: 180s
-      timeout: 15s
-      retries: 15
-
-  cassandra-2:
-    image: "cassandra:5.0.5"
-    container_name: "cassandra-2"
-    ports:
-      - 9043:9042
-    networks:
-      - cassandra-net
-    environment:
-      - CASSANDRA_START_RPC=true
-      - CASSANDRA_RPC_ADDRESS=0.0.0.0
-      - CASSANDRA_LISTEN_ADDRESS=auto
-      - CASSANDRA_CLUSTER_NAME=my-cluster
-      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
-      - CASSANDRA_DC=my-datacenter-1
-      - CASSANDRA_RACK=rack-2
-      - CASSANDRA_SEEDS=cassandra-1
-    depends_on:
-      cassandra-1:
-        condition: service_healthy
-    volumes:
-      - cassandra-node-2:/var/lib/cassandra:rw
-    restart: on-failure
-    healthcheck:
-      test: ["CMD-SHELL", "nodetool info || exit 1"]
-      interval: 30s
-      start_period: 180s
-      timeout: 15s
-      retries: 15
-
-  cassandra-3:
-    image: "cassandra:5.0.5"
-    container_name: "cassandra-3"
-    ports:
-      - 9044:9042
-    networks:
-      - cassandra-net
-    environment:
-      - CASSANDRA_START_RPC=true
-      - CASSANDRA_RPC_ADDRESS=0.0.0.0
-      - CASSANDRA_LISTEN_ADDRESS=auto
-      - CASSANDRA_CLUSTER_NAME=my-cluster
-      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
-      - CASSANDRA_DC=my-datacenter-1
-      - CASSANDRA_RACK=rack-3
-      - CASSANDRA_SEEDS=cassandra-1
-    depends_on:
-      cassandra-1:
-        condition: service_healthy
-      cassandra-2:
-        condition: service_healthy
-    volumes:
-      - cassandra-node-3:/var/lib/cassandra:rw
-    restart: on-failure
-    healthcheck:
-      test: ["CMD-SHELL", "nodetool info || exit 1"]
-      interval: 30s
-      start_period: 180s
-      timeout: 15s
-      retries: 15
-
-volumes:
-  cassandra-node-1:
-  cassandra-node-2:
-  cassandra-node-3:
-
